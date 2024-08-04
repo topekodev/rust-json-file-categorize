@@ -7,6 +7,7 @@ pub struct Config {
     pub label_dir: String,
     pub out_dir: String,
     pub file_link_property: String,
+    pub file_link_property_get_filename: bool,
     pub categories: Vec<Category>,
 }
 #[derive(Debug)]
@@ -56,6 +57,7 @@ pub fn load_config(config_path: &str) -> Config {
         label_dir: config_json.get("label_dir").to_string(),
         out_dir: config_json.get("out_dir").to_string(),
         file_link_property: config_json.get("file_link_property").to_string(),
+        file_link_property_get_filename: config_json.get("file_link_property_get_filename").bool(),
         categories
     };
     config

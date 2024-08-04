@@ -23,6 +23,8 @@ fn get_args(n: usize) -> String {
 }
 
 fn main() {
+    let mut count = 0;
+
     if path::Path::new(&CONFIG.out_dir).exists() {
         fs::remove_dir_all(&CONFIG.out_dir).expect("Could not remove existing out dir");
     }
@@ -32,17 +34,22 @@ fn main() {
     for label in labels {
         let label_data = fs::read_to_string(&label).expect("Could not read label file");
         let label_json: gjson::Value = gjson::parse(&label_data);
-        let linking_file = label_json.get(&CONFIG.file_link_property).to_string();
+        let linking_file = if CONFIG.file_link_property_get_filename {
+            &path::Path::new(&label_json.get(&CONFIG.file_link_property).to_string()).file_name().and_then(|s| s.to_str()).unwrap_or("").to_string()
+        } else {
+            &label_json.get(&CONFIG.file_link_property).to_string()
+        };
         let file_path = path::Path::new(&CONFIG.file_dir).join(&linking_file);
-        if file_path.is_file() {
+        if file_path.exists() {
             for category in &CONFIG.categories {
                 if match_filters(&label_json, &category.filters) {
                     symlink_file(&linking_file, &category.name);
+                    count+=1;
                 }
             }
         }
     }
-    println!("Done!");
+    println!("Symlinked {} files", count);
 }
 
 fn match_filters(label: &gjson::Value, filters: &Vec<config::Filter>) -> bool {
@@ -69,10 +76,10 @@ fn get_labels() -> Vec<path::PathBuf> {
 }
 
 fn symlink_file(file: &String, category: &String) {
-    let source_dir = if path::Path::new(&CONFIG.out_dir).is_relative() {
-        path::Path::new("../").join(&CONFIG.out_dir).to_path_buf()
+    let source_dir = if path::Path::new(&CONFIG.file_dir).is_relative() {
+        path::Path::new("../../").join(&CONFIG.file_dir).to_path_buf()
     } else {
-        path::Path::new(&CONFIG.out_dir).to_path_buf()
+        path::Path::new(&CONFIG.file_dir).to_path_buf()
     };
     let source_path = source_dir.join(&file);
     let dest_dir = path::Path::new(&CONFIG.out_dir).join(category);
