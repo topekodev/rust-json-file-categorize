@@ -6,7 +6,7 @@ pub struct Config {
     pub file_dir: String,
     pub label_dir: String,
     pub out_dir: String,
-    pub label_file_link_property: Vec<String>,
+    pub file_link_property: String,
     pub categories: Vec<Category>,
 }
 #[derive(Debug)]
@@ -38,7 +38,7 @@ impl Filter {
             values.push(value.to_string()); 
         }
         Filter {
-            property: json.get("properties").to_string(),
+            property: json.get("property").to_string(),
             values
         }
     }
@@ -47,20 +47,15 @@ impl Filter {
 pub fn load_config(config_path: &str) -> Config {
     let config_data = fs::read_to_string(config_path).expect("Could not read config file");
     let config_json: gjson::Value = gjson::parse(&config_data);
-    let mut label_file_link_property: Vec<String> = vec![];
-    for property in config_json.get("label_file_link_property").array() {
-        label_file_link_property.push(property.to_string());
-    }
     let mut categories: Vec<Category> = vec![];
     for category in config_json.get("categories").array() {
         categories.push(Category::new(category));
     }
-    println!("{:?}", categories);
     let config: Config = Config {
         file_dir: config_json.get("file_dir").to_string(),
         label_dir: config_json.get("label_dir").to_string(),
         out_dir: config_json.get("out_dir").to_string(),
-        label_file_link_property,
+        file_link_property: config_json.get("file_link_property").to_string(),
         categories
     };
     config
