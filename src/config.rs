@@ -5,7 +5,8 @@ use gjson;
 pub struct Config {
     pub file_dir: String,
     pub label_dir: String,
-    pub out_dir: String,
+    pub file_out_dir: String,
+    pub label_out_dir: String,
     pub file_link_property: String,
     pub file_link_property_get_filename: bool,
     pub categories: Vec<Category>,
@@ -55,7 +56,8 @@ pub fn load_config(config_path: &str) -> Config {
     let config: Config = Config {
         file_dir: config_json.get("file_dir").to_string(),
         label_dir: config_json.get("label_dir").to_string(),
-        out_dir: config_json.get("out_dir").to_string(),
+        file_out_dir: config_json.get("file_out_dir").to_string(),
+        label_out_dir: config_json.get("label_out_dir").to_string(),
         file_link_property: config_json.get("file_link_property").to_string(),
         file_link_property_get_filename: config_json.get("file_link_property_get_filename").bool(),
         categories

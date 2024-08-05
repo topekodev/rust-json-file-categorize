@@ -23,14 +23,16 @@ fn get_args(n: usize) -> String {
 }
 
 fn main() {
-    let mut count = 0;
-
-    if path::Path::new(&CONFIG.out_dir).exists() {
-        fs::remove_dir_all(&CONFIG.out_dir).expect("Could not remove existing out dir");
+    if path::Path::new(&CONFIG.file_out_dir).exists() {
+        fs::remove_dir_all(&CONFIG.file_out_dir).expect("Could not remove existing out dir");
+    }
+    if path::Path::new(&CONFIG.label_out_dir).exists() {
+        fs::remove_dir_all(&CONFIG.label_out_dir).expect("Could not remove existing out dir");
     }
 
     let labels = get_labels();
     println!("Processing...");
+    let mut count = 0;
     for label in labels {
         let label_data = fs::read_to_string(&label).expect("Could not read label file");
         let label_json: gjson::Value = gjson::parse(&label_data);
@@ -43,7 +45,7 @@ fn main() {
         if file_path.exists() {
             for category in &CONFIG.categories {
                 if match_filters(&label_json, &category.filters) {
-                    symlink_file(&linking_file, &category.name);
+                    symlink(&file_path, &label, &category.name);
                     count+=1;
                 }
             }
@@ -75,15 +77,15 @@ fn get_labels() -> Vec<path::PathBuf> {
     json_files
 }
 
-fn symlink_file(file: &String, category: &String) {
-    let source_dir = if path::Path::new(&CONFIG.file_dir).is_relative() {
-        path::Path::new("../../").join(&CONFIG.file_dir).to_path_buf()
-    } else {
-        path::Path::new(&CONFIG.file_dir).to_path_buf()
-    };
-    let source_path = source_dir.join(&file);
-    let dest_dir = path::Path::new(&CONFIG.out_dir).join(category);
-    let dest_path = dest_dir.join(file);
-    fs::create_dir_all(dest_dir).expect("Could not create destionation dir");
-    unix::fs::symlink(source_path, dest_path).expect("Could not symlink file");
+fn symlink(file: &path::PathBuf, label: &path::PathBuf, category: &String) {
+    let file_name = file.file_name().unwrap();
+    let file_dest_dir = path::Path::new(&CONFIG.file_out_dir).join(category);
+    let file_dest_path = file_dest_dir.join(file_name);
+    let label_name = label.file_name().unwrap();
+    let label_dest_dir = path::Path::new(&CONFIG.label_out_dir).join(category);
+    let label_dest_path = label_dest_dir.join(label_name);
+    fs::create_dir_all(file_dest_dir).expect("Could not create destionation dir");
+    fs::create_dir_all(label_dest_dir).expect("Could not create destionation dir");
+    unix::fs::symlink(file, file_dest_path).expect("Could not symlink file");
+    unix::fs::symlink(label, label_dest_path).expect("Could not symlink file");
 }
