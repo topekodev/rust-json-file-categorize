@@ -26,6 +26,7 @@ Configuration file:
     "label_out_dir": "./labels-out",
     "file_link_property": "filename",
     "file_link_property_get_filename": false,
+    "method": "symlink",
     "categories": [
         {
             "name": "name",

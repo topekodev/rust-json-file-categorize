@@ -45,13 +45,13 @@ fn main() {
         if file_path.exists() {
             for category in &CONFIG.categories {
                 if match_filters(&label_json, &category.filters) {
-                    symlink(&file_path, &label, &category.name);
+                    handle_match(&file_path, &label, &category.name);
                     count+=1;
                 }
             }
         }
     }
-    println!("Symlinked {} files", count);
+    println!("Categorized {} files", count);
 }
 
 fn match_filters(label: &gjson::Value, filters: &Vec<config::Filter>) -> bool {
@@ -77,7 +77,7 @@ fn get_labels() -> Vec<path::PathBuf> {
     json_files
 }
 
-fn symlink(file: &path::PathBuf, label: &path::PathBuf, category: &String) {
+fn handle_match(file: &path::PathBuf, label: &path::PathBuf, category: &String) {
     let file_name = file.file_name().unwrap();
     let file_dest_dir = path::Path::new(&CONFIG.file_out_dir).join(category);
     let file_dest_path = file_dest_dir.join(file_name);
@@ -86,6 +86,16 @@ fn symlink(file: &path::PathBuf, label: &path::PathBuf, category: &String) {
     let label_dest_path = label_dest_dir.join(label_name);
     fs::create_dir_all(file_dest_dir).expect("Could not create destionation dir");
     fs::create_dir_all(label_dest_dir).expect("Could not create destionation dir");
-    unix::fs::symlink(file, file_dest_path).expect("Could not symlink file");
-    unix::fs::symlink(label, label_dest_path).expect("Could not symlink file");
+    
+    match CONFIG.method.as_str() {
+        "symlink"=>{
+            unix::fs::symlink(file, file_dest_path).expect("Could not symlink file");
+            unix::fs::symlink(label, label_dest_path).expect("Could not symlink file");
+        },
+        "copy"=>{
+            fs::copy(file, file_dest_path).expect("Could not copy file");
+            fs::copy(label, label_dest_path).expect("Could not copy file");
+        },
+        _=>panic!("No method found")
+    }
 }
