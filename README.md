@@ -22,7 +22,8 @@ Configuration file:
 {
     "file_dir": "./files",
     "label_dir": "./labels",
-    "out_dir": "./out",
+    "file_out_dir": "./files-out",
+    "label_out_dir": "./labels-out",
     "file_link_property": "filename",
     "file_link_property_get_filename": false,
     "categories": [
